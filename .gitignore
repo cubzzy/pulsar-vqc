@@ -4,6 +4,7 @@ data/
 # Output files
 vqc_results.csv
 feature_selection_summary.csv
+confusion_matrix_*
 
 # Python
 venv/
