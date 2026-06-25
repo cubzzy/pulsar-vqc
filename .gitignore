@@ -1,0 +1,14 @@
+# Generated data files
+data/
+
+# Output files
+vqc_results.csv
+feature_selection_summary.csv
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Mac
+.DS_Store

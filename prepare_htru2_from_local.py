@@ -4,7 +4,7 @@ prepare_htru2_from_local.py
 Preprocesses a local HTRU_2.csv file for Qiskit VQC experiments.
 
 Input:
-    data/HTRU_2.csv
+    htru2/HTRU_2.csv
 
 Outputs:
     data/7-datacut_5-features.csv
@@ -44,7 +44,7 @@ COLUMNS = [
 ]
 
 
-def load_local_htru2(path="data/HTRU_2.csv"):
+def load_local_htru2(path="htru2/HTRU_2.csv"):
     """
     Load local HTRU2 data.
 
@@ -106,7 +106,8 @@ def save_files(df, method, target_dir):
         full_path = os.path.join(target_dir, f"f-datacut_{n_features}-features.csv")
         processed.to_csv(full_path, index=False)
 
-        chunks = np.array_split(processed, 9)
+        indices = np.array_split(np.arange(len(processed)), 9)
+        chunks = [processed.iloc[idx] for idx in indices]
 
         for i, chunk in enumerate(chunks, start=1):
             chunk_path = os.path.join(target_dir, f"{i}-datacut_{n_features}-features.csv")
@@ -125,7 +126,7 @@ def save_files(df, method, target_dir):
 
 
 def main():
-    df = load_local_htru2("data/HTRU_2.csv")
+    df = load_local_htru2("htru2/HTRU_2.csv")
 
     df = shuffle(df, random_state=RANDOM_STATE).reset_index(drop=True)
 
