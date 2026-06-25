@@ -243,7 +243,10 @@ for n_samples in sample_sizes:
 
                     plt.xlabel("Model prediction")
                     plt.ylabel("True label")
-                    plt.show()
+                    plot_filename = f"confusion_matrix_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
+                    plt.savefig(plot_filename, bbox_inches="tight")
+                    plt.close()
+                    print(f"Confusion matrix saved to: {plot_filename}")
 
                 except Exception as e:
                     error_message = f"Error training {feature_map_name} + {ansatz_name}: {e}"
