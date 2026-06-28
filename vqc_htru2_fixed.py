@@ -21,6 +21,7 @@ from sklearn.metrics import confusion_matrix, classification_report, matthews_co
 from sklearn.model_selection import train_test_split
 
 from qiskit_machine_learning.algorithms import VQC
+from qiskit_algorithms.optimizers import SLSQP
 #from qiskit_machine_learning.circuit.library import RawFeatureVector
 from qiskit.circuit.library import (
     ZZFeatureMap,
@@ -183,6 +184,7 @@ for n_samples in sample_sizes:
                         num_qubits=n_qubits,
                         feature_map=feature_map,
                         ansatz=ansatz,
+                        optimizer=SLSQP()
                     )
 
                     model.fit(X_train.to_numpy(), y_train)
