@@ -54,7 +54,7 @@ print("Loaded shape:", df.shape)
 #===================================================================
 # Further data cut
 
-sample_sizes = [25]
+sample_sizes = [180]
 n_features = df.shape[1] - 1
 n_qubits = n_features
 
