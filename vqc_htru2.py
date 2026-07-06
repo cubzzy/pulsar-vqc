@@ -1,5 +1,5 @@
 """
-vqc_htru2_fixed.py
+vqc_htru2.py
 
 Runs a Qiskit Variational Quantum Classifier on a preprocessed HTRU2 file.
 
@@ -26,7 +26,9 @@ from qiskit_algorithms.optimizers import COBYLA
 from qiskit_aer.primitives import SamplerV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
+from qiskit_machine_learning.utils import algorithm_globals
 
+algorithm_globals.random_seed = 42
 from qiskit.circuit.library import (
     ZZFeatureMap,
     PauliFeatureMap,
@@ -39,11 +41,11 @@ from qiskit.circuit.library import (
 #===================================================================
 # Import preprocessed data
 
-cut = 7
-n_feat = 5
+cut = 'f'
+n_feat = 3
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-path = os.path.join(script_dir, "data")
+path = os.path.join(script_dir, "data/FS2")
 filename = f"{cut}-datacut_{n_feat}-features"
 data_file = os.path.join(path, filename + ".csv")
 
@@ -58,7 +60,7 @@ print("Loaded shape:", df.shape)
 #===================================================================
 # Further data cut
 
-sample_sizes = [180]
+sample_sizes = [300]
 n_features = df.shape[1] - 1
 n_qubits = n_features
 
@@ -67,9 +69,9 @@ n_qubits = n_features
 # Experiment settings
 
 feature_maps = ["ZZFeatureMap"]
-ansatz_list = ["RealAmplitudes"]
-entanglement_options = ["linear"]
-
+ansatz_list = ["EfficientSU2"]
+entanglement_options = ["full"]
+loss_functions = ["cross_entropy"]
 state = 42
 
 output_file = "vqc_results.csv"
@@ -152,119 +154,123 @@ for n_samples in sample_sizes:
     for feature_map_name in feature_maps:
         for ansatz_name in ansatz_list:
             for entanglement in entanglement_options:
-                try:
-                    print("\n==============================================")
-                    print("Feature map:", feature_map_name)
-                    print("Ansatz:", ansatz_name)
-                    print("Entanglement:", entanglement)
-                    print("Training samples:", n_samples)
-                    print("Features/qubits:", n_qubits)
+                for loss in loss_functions:
+                    try:
+                        print("\n==============================================")
+                        print("Feature map:", feature_map_name)
+                        print("Ansatz:", ansatz_name)
+                        print("Entanglement:", entanglement)
+                        print("Loss:", loss)
+                        print("Training samples:", n_samples)
+                        print("Features/qubits:", n_qubits)
 
-                    feature_map = create_circuit(
-                        feature_map_name,
-                        n_qubits,
-                        entanglement,
-                        prefix="f",
-                    )
-
-                    ansatz = create_circuit(
-                        ansatz_name,
-                        n_qubits,
-                        entanglement,
-                        prefix="a",
-                    )
-
-                    if feature_map.num_qubits != X_train.shape[1]:
-                        error_message = (
-                            f"Incompatible feature map '{feature_map_name}' requires "
-                            f"{feature_map.num_qubits} qubits, but "
-                            f"{X_train.shape[1]} features were provided."
+                        feature_map = create_circuit(
+                            feature_map_name,
+                            n_qubits,
+                            entanglement,
+                            prefix="f",
                         )
+
+                        ansatz = create_circuit(
+                            ansatz_name,
+                            n_qubits,
+                            entanglement,
+                            prefix="a",
+                        )
+
+                        if feature_map.num_qubits != X_train.shape[1]:
+                            error_message = (
+                                f"Incompatible feature map '{feature_map_name}' requires "
+                                f"{feature_map.num_qubits} qubits, but "
+                                f"{X_train.shape[1]} features were provided."
+                            )
+                            print(error_message)
+                            errors.append((feature_map_name, ansatz_name, error_message))
+                            continue
+
+                        AER = SamplerV2(default_shots=4096, seed = 42)
+                        aer_simulator = AerSimulator()
+
+                        model = VQC(
+                            num_qubits=n_qubits,
+                            feature_map=feature_map,
+                            ansatz=ansatz,
+                            optimizer=COBYLA(),
+                            sampler=AER,
+                            pass_manager=generate_preset_pass_manager(backend=aer_simulator),
+                            loss=loss
+                        )
+
+                        model.fit(X_train.to_numpy(), y_train)
+
+
+                        print("\nTesting the model...")
+                        y_pred = model.predict(X_test.to_numpy()).astype(int)
+
+                        print("Classification report:")
+                        print(classification_report(y_test, y_pred, labels=[0, 1]))
+
+                        cf_matrix = confusion_matrix(y_test, y_pred, labels=[0, 1])
+                        TN, FP, FN, TP = cf_matrix.ravel()
+
+                        accuracy = round((TP + TN) / (TP + TN + FP + FN), 3)
+                        precision = round(TP / (TP + FP), 3) if (TP + FP) else 0
+                        recall = round(TP / (TP + FN), 3) if (TP + FN) else 0
+                        f1 = round(2 * precision * recall / (precision + recall), 3) if (precision + recall) else 0
+                        fpr = round(FP / (FP + TN), 3) if (FP + TN) else 0
+                        mcc = round(matthews_corrcoef(y_test, y_pred), 3)
+
+                        result_dict = {
+                            "N_samples": n_samples,
+                            "N_features": n_qubits,
+                            "Feature_map": feature_map_name,
+                            "Ansatz": ansatz_name,
+                            "Entanglement": entanglement,
+                            "Loss": loss,
+                            "Accuracy": accuracy,
+                            "Precision": precision,
+                            "Recall": recall,
+                            "F1-score": f1,
+                            "FPR": fpr,
+                            "MCC": mcc,
+                            "TP": TP,
+                            "TN": TN,
+                            "FP": FP,
+                            "FN": FN,
+                        }
+
+                        print("Result:")
+                        print(result_dict)
+
+                        results = pd.concat(
+                            [results, pd.DataFrame([result_dict])],
+                            ignore_index=True,
+                        )
+
+                        results.to_csv(output_file, index=False)
+
+                        print("Confusion matrix:")
+
+                        sns.heatmap(
+                            cf_matrix,
+                            cmap="Purples",
+                            annot=True,
+                            linewidth=1,
+                            fmt="d",
+                        )
+
+                        plt.xlabel("Model prediction")
+                        plt.ylabel("True label")
+                        plot_filename = f"confusion_matrix_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
+                        plt.savefig(plot_filename, bbox_inches="tight")
+                        plt.close()
+                        print(f"Confusion matrix saved to: {plot_filename}")
+
+                    except Exception as e:
+                        error_message = f"Error training {feature_map_name} + {ansatz_name}: {e}"
                         print(error_message)
-                        errors.append((feature_map_name, ansatz_name, error_message))
+                        errors.append((feature_map_name, ansatz_name, str(e)))
                         continue
-
-                    AER = SamplerV2(default_shots=4096)
-                    aer_simulator = AerSimulator()
-
-                    model = VQC(
-                        num_qubits=n_qubits,
-                        feature_map=feature_map,
-                        ansatz=ansatz,
-                        optimizer=COBYLA(),
-                        sampler=AER,
-                        pass_manager=generate_preset_pass_manager(backend=aer_simulator),
-                    )
-
-                    model.fit(X_train.to_numpy(), y_train)
-
-
-                    print("\nTesting the model...")
-                    y_pred = model.predict(X_test.to_numpy()).astype(int)
-
-                    print("Classification report:")
-                    print(classification_report(y_test, y_pred, labels=[0, 1]))
-
-                    cf_matrix = confusion_matrix(y_test, y_pred, labels=[0, 1])
-                    TN, FP, FN, TP = cf_matrix.ravel()
-
-                    accuracy = round((TP + TN) / (TP + TN + FP + FN), 3)
-                    precision = round(TP / (TP + FP), 3) if (TP + FP) else 0
-                    recall = round(TP / (TP + FN), 3) if (TP + FN) else 0
-                    f1 = round(2 * precision * recall / (precision + recall), 3) if (precision + recall) else 0
-                    fpr = round(FP / (FP + TN), 3) if (FP + TN) else 0
-                    mcc = round(matthews_corrcoef(y_test, y_pred), 3)
-
-                    result_dict = {
-                        "N_samples": n_samples,
-                        "N_features": n_qubits,
-                        "Feature_map": feature_map_name,
-                        "Ansatz": ansatz_name,
-                        "Entanglement": entanglement,
-                        "Accuracy": accuracy,
-                        "Precision": precision,
-                        "Recall": recall,
-                        "F1-score": f1,
-                        "FPR": fpr,
-                        "MCC": mcc,
-                        "TP": TP,
-                        "TN": TN,
-                        "FP": FP,
-                        "FN": FN,
-                    }
-
-                    print("Result:")
-                    print(result_dict)
-
-                    results = pd.concat(
-                        [results, pd.DataFrame([result_dict])],
-                        ignore_index=True,
-                    )
-
-                    results.to_csv(output_file, index=False)
-
-                    print("Confusion matrix:")
-
-                    sns.heatmap(
-                        cf_matrix,
-                        cmap="Purples",
-                        annot=True,
-                        linewidth=1,
-                        fmt="d",
-                    )
-
-                    plt.xlabel("Model prediction")
-                    plt.ylabel("True label")
-                    plot_filename = f"confusion_matrix_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
-                    plt.savefig(plot_filename, bbox_inches="tight")
-                    plt.close()
-                    print(f"Confusion matrix saved to: {plot_filename}")
-
-                except Exception as e:
-                    error_message = f"Error training {feature_map_name} + {ansatz_name}: {e}"
-                    print(error_message)
-                    errors.append((feature_map_name, ansatz_name, str(e)))
-                    continue
 
 
 #===================================================================
