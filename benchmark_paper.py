@@ -14,6 +14,7 @@ Expected input, created by prepare_htru2.py:
     data/FS2/f-datacut_3-features.csv
 
 Run:
+    python prepare_htru2.py
     python benchmark_paper.py
 """
 
