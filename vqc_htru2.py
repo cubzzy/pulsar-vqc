@@ -3,12 +3,12 @@ vqc_htru2_fixed.py
 
 Runs a Qiskit Variational Quantum Classifier on a preprocessed HTRU2 file.
 
-Expected input, created by prepare_htru2_from_local.py:
+Expected input, created by prepare_htru2.py:
     data/7-datacut_5-features.csv
 
 Run:
-    python prepare_htru2_from_local.py
-    python vqc_htru2_fixed.py
+    python prepare_htru2.py
+    python vqc_htru2.py
 """
 
 import os
@@ -21,8 +21,12 @@ from sklearn.metrics import confusion_matrix, classification_report, matthews_co
 from sklearn.model_selection import train_test_split
 
 from qiskit_machine_learning.algorithms import VQC
-from qiskit_algorithms.optimizers import SLSQP
+from qiskit_algorithms.optimizers import COBYLA
 #from qiskit_machine_learning.circuit.library import RawFeatureVector
+from qiskit_aer.primitives import SamplerV2
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit_aer import AerSimulator
+
 from qiskit.circuit.library import (
     ZZFeatureMap,
     PauliFeatureMap,
@@ -180,14 +184,20 @@ for n_samples in sample_sizes:
                         errors.append((feature_map_name, ansatz_name, error_message))
                         continue
 
+                    AER = SamplerV2(default_shots=4096)
+                    aer_simulator = AerSimulator()
+
                     model = VQC(
                         num_qubits=n_qubits,
                         feature_map=feature_map,
                         ansatz=ansatz,
-                        optimizer=SLSQP()
+                        optimizer=COBYLA(),
+                        sampler=AER,
+                        pass_manager=generate_preset_pass_manager(backend=aer_simulator),
                     )
 
                     model.fit(X_train.to_numpy(), y_train)
+
 
                     print("\nTesting the model...")
                     y_pred = model.predict(X_test.to_numpy()).astype(int)
