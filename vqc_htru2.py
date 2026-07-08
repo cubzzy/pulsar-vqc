@@ -21,7 +21,7 @@ from sklearn.metrics import confusion_matrix, classification_report, matthews_co
 from sklearn.model_selection import train_test_split
 
 from qiskit_machine_learning.algorithms import VQC
-from qiskit_algorithms.optimizers import COBYLA
+from qiskit_machine_learning.optimizers import COBYLA
 #from qiskit_machine_learning.circuit.library import RawFeatureVector
 from qiskit_aer.primitives import SamplerV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -150,7 +150,7 @@ X_train_pool, X_test, y_train_pool, y_test = train_test_split(
 for n_samples in sample_sizes:
     X_train = X_train_pool.iloc[:n_samples]
     y_train = y_train_pool[:n_samples]
-
+    loss_values = []
     for feature_map_name in feature_maps:
         for ansatz_name in ansatz_list:
             for entanglement in entanglement_options:
@@ -198,7 +198,8 @@ for n_samples in sample_sizes:
                             optimizer=COBYLA(),
                             sampler=AER,
                             pass_manager=generate_preset_pass_manager(backend=aer_simulator),
-                            loss=loss
+                            loss=loss,
+                            callback=lambda weight, loss_value: loss_values.append(loss_value)
                         )
 
                         model.fit(X_train.to_numpy(), y_train)
@@ -265,6 +266,14 @@ for n_samples in sample_sizes:
                         plt.savefig(plot_filename, bbox_inches="tight")
                         plt.close()
                         print(f"Confusion matrix saved to: {plot_filename}")
+
+                        # plotting loss curve
+                        plt.plot(range(len(loss_values)), loss_values)
+                        plt.xlabel("Iteration")
+                        plt.ylabel("Loss")
+                        plt.title("Training Loss")
+                        plt.savefig(f"loss_curve_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png", bbox_inches="tight")
+                        plt.close()
 
                     except Exception as e:
                         error_message = f"Error training {feature_map_name} + {ansatz_name}: {e}"
