@@ -6,6 +6,7 @@ vqc_results.csv
 feature_selection_summary.csv
 confusion_matrix_*
 loss_curve*
+auc_curve*
 
 # Python
 venv/

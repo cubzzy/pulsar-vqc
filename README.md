@@ -56,15 +56,15 @@ This project builds on [Souza et al. (2025)](https://arxiv.org/abs/2505.15600), 
 ## Quickstart
 
 ```bash
-# 1. Place HTRU_2.csv into a data/ folder next to the scripts
+# 1. Place HTRU_2.csv into a data/ folder next to the scripts (it's already in the repo)
 # 2. Generate preprocessed files
-python prepare_htru2_from_local.py
+python prepare_htru2.py
 
 # 3. Run the VQC experiment
-python vqc_htru2_fixed.py
+python vqc_htru2.py
 ```
 
-**Dependencies:** `qiskit`, `qiskit-machine-learning`, `scikit-learn`, `pandas`, `numpy`, `matplotlib`, `seaborn`
+**Dependencies:** `pandas`, `matplotlib`, `seaborn`, `scikit-learn`, `scipy`, `qiskit`, `qiskit-machine-learning`, `qiskit-algorithms`, `qiskit-aer`
 
 ---
 

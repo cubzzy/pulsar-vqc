@@ -12,5 +12,5 @@ qiskit-aer==0.17.2
 #
 # To run:
 #   1. Place HTRU_2.csv in the data folder next to the scripts (it's already in the repo)
-#   2. python3 prepare_htru2_from_local.py
-#   3. python3 vqc_htru2_fixed.py
+#   2. python3 prepare_htru2.py
+#   3. python3 vqc_htru2.py

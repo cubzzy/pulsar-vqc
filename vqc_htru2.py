@@ -4,7 +4,7 @@ vqc_htru2.py
 Runs a Qiskit Variational Quantum Classifier on a preprocessed HTRU2 file.
 
 Expected input, created by prepare_htru2.py:
-    data/7-datacut_5-features.csv
+    f-datacut_3-features.csv
 
 Run:
     python prepare_htru2.py
@@ -16,10 +16,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-from sklearn.metrics import confusion_matrix, classification_report, matthews_corrcoef
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+from sklearn.metrics import confusion_matrix, classification_report, matthews_corrcoef, roc_curve, auc
 from sklearn.model_selection import train_test_split
-
 from qiskit_machine_learning.algorithms import VQC
 from qiskit_machine_learning.optimizers import COBYLA
 #from qiskit_machine_learning.circuit.library import RawFeatureVector
@@ -49,12 +49,9 @@ path = os.path.join(script_dir, "data/FS2")
 filename = f"{cut}-datacut_{n_feat}-features"
 data_file = os.path.join(path, filename + ".csv")
 
-print("Looking for:", data_file)
-
 df = pd.read_csv(data_file)
 
 print(df.head())
-print("Loaded shape:", df.shape)
 
 
 #===================================================================
@@ -207,10 +204,12 @@ for n_samples in sample_sizes:
 
                         print("\nTesting the model...")
                         y_pred = model.predict(X_test.to_numpy()).astype(int)
-
+                        x_pred = model.predict_proba(X_test.to_numpy())
+                      
                         print("Classification report:")
                         print(classification_report(y_test, y_pred, labels=[0, 1]))
 
+                        cf_matrix_norm = confusion_matrix(y_test, y_pred, labels=[0, 1], normalize='true')
                         cf_matrix = confusion_matrix(y_test, y_pred, labels=[0, 1])
                         TN, FP, FN, TP = cf_matrix.ravel()
 
@@ -240,8 +239,8 @@ for n_samples in sample_sizes:
                             "FN": FN,
                         }
 
-                        print("Result:")
-                        print(result_dict)
+                        # print("Result:")
+                        # print(result_dict)
 
                         results = pd.concat(
                             [results, pd.DataFrame([result_dict])],
@@ -250,30 +249,59 @@ for n_samples in sample_sizes:
 
                         results.to_csv(output_file, index=False)
 
-                        print("Confusion matrix:")
-
                         sns.heatmap(
-                            cf_matrix,
+                            cf_matrix_norm,
                             cmap="Purples",
                             annot=True,
                             linewidth=1,
-                            fmt="d",
+                            fmt=".1%",
                         )
 
-                        plt.xlabel("Model prediction")
-                        plt.ylabel("True label")
-                        plot_filename = f"confusion_matrix_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
-                        plt.savefig(plot_filename, bbox_inches="tight")
-                        plt.close()
-                        print(f"Confusion matrix saved to: {plot_filename}")
+                        # printing the number of non-pulsars and pulsars in the training set
+                        nonpulsars = np.unique(y_train, return_counts=True)[1][0]
+                        pulsars = np.unique(y_train, return_counts=True)[1][1]
+                        print(f"Amount of non-pulsars in training set: {nonpulsars}")
+                        print(f"Amount of pulsars in training set: {pulsars}")
 
+                        # printing the number of non-pulsars and pulsars in the testing set
+                        nonpulsars = np.unique(y_test, return_counts=True)[1][0]
+                        pulsars = np.unique(y_test, return_counts=True)[1][1]
+                        print(f"Amount of non-pulsars in testing set: {nonpulsars}")
+                        print(f"Amount of pulsars in testing set: {pulsars}")
+
+                        # plotting confusion matrix
+                        plt.title(f"Confusion Matrix, Training Size = {X_train.shape[0]}")
+                        plt.xlabel(f"Model prediction, Training Size = {X_train.shape[0]}, Testing Size = {X_test.shape[0]}")
+                        plt.ylabel("True label")
+                        confusion_filename = f"confusion_matrix_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
+                        plt.savefig(confusion_filename, bbox_inches="tight")
+                        plt.close()
+                        print(f"\nConfusion matrix saved to: {confusion_filename}")
+                        
                         # plotting loss curve
                         plt.plot(range(len(loss_values)), loss_values)
                         plt.xlabel("Iteration")
                         plt.ylabel("Loss")
                         plt.title("Training Loss")
-                        plt.savefig(f"loss_curve_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png", bbox_inches="tight")
+                        loss_filename = f"loss_curve_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
+                        plt.savefig(loss_filename, bbox_inches="tight")
                         plt.close()
+                        print(f"Loss curve saved to: {loss_filename}")
+
+                        # plotting the AUC curve
+                        roc_fpr, roc_tpr, thresholds = roc_curve(y_test, x_pred[:,1])
+                        auc_curve = auc(roc_fpr, roc_tpr)
+                        fig, ax = plt.subplots()
+                        ax.set_title('AUC curve')
+                        ax.plot(roc_fpr, roc_tpr, label = f"AUC = {auc_curve:.3f}")
+                        ax.plot(roc_fpr, roc_fpr, label = 'Random Guessing')
+                        ax.set_xlabel('False Positive Rate')
+                        ax.set_ylabel('True Positive Rate')
+                        auc_filename = f"auc_curve_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
+                        ax.legend()
+                        plt.savefig(auc_filename, bbox_inches="tight")
+                        plt.close()
+                        print(f"AUC curve saved to {auc_filename}")
 
                     except Exception as e:
                         error_message = f"Error training {feature_map_name} + {ansatz_name}: {e}"
