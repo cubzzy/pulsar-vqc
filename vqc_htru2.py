@@ -11,31 +11,27 @@ Run:
     python vqc_htru2.py
 """
 
-import os
-import numpy as np
-import pandas as pd
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 from sklearn.metrics import confusion_matrix, classification_report, matthews_corrcoef
 from sklearn.model_selection import train_test_split
 from qiskit_machine_learning.algorithms import VQC
-from qiskit_machine_learning.optimizers import COBYLA
-#from qiskit_machine_learning.circuit.library import RawFeatureVector
-from qiskit_aer.primitives import SamplerV2
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit_aer import AerSimulator
+from qiskit_machine_learning.optimizers import COBYLA, SLSQP
 from qiskit_machine_learning.utils import algorithm_globals
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit_aer.primitives import SamplerV2
+from qiskit_aer import AerSimulator
 from report_maker import make_report
+from qiskit.circuit.library import (
+    zz_feature_map,
+    pauli_feature_map,
+    real_amplitudes,
+    efficient_su2,
+    n_local,
+)
+import pandas as pd
+import numpy as np
+import os
 
 algorithm_globals.random_seed = 42
-from qiskit.circuit.library import (
-    ZZFeatureMap,
-    PauliFeatureMap,
-    RealAmplitudes,
-    EfficientSU2,
-    TwoLocal,
-)
-
 
 #===================================================================
 # Import preprocessed data
@@ -80,7 +76,7 @@ reports_root = os.path.join(script_dir, "report_outputs")
 def create_circuit(circuit_name, n_qubits, entanglement, prefix):
     """Create a Qiskit circuit from a string name."""
     if circuit_name == "ZZFeatureMap":
-        return ZZFeatureMap(
+        return zz_feature_map(
             feature_dimension=n_qubits,
             entanglement=entanglement,
             reps=2,
@@ -88,18 +84,15 @@ def create_circuit(circuit_name, n_qubits, entanglement, prefix):
         )
 
     if circuit_name == "PauliFeatureMap":
-        return PauliFeatureMap(
+        return pauli_feature_map(
             feature_dimension=n_qubits,
             entanglement=entanglement,
             reps=2,
             parameter_prefix=prefix,
         )
 
-    #if circuit_name == "RawFeatureVector":
-        #return RawFeatureVector(feature_dimension=n_qubits)
-
     if circuit_name == "RealAmplitudes":
-        return RealAmplitudes(
+        return real_amplitudes(
             num_qubits=n_qubits,
             entanglement=entanglement,
             reps=2,
@@ -107,7 +100,7 @@ def create_circuit(circuit_name, n_qubits, entanglement, prefix):
         )
 
     if circuit_name == "EfficientSU2":
-        return EfficientSU2(
+        return efficient_su2(
             num_qubits=n_qubits,
             entanglement=entanglement,
             reps=2,
@@ -115,7 +108,7 @@ def create_circuit(circuit_name, n_qubits, entanglement, prefix):
         )
 
     if circuit_name == "TwoLocal":
-        return TwoLocal(
+        return n_local(
             num_qubits=n_qubits,
             rotation_blocks="ry",
             entanglement_blocks="cz",
@@ -190,15 +183,19 @@ for n_samples in sample_sizes:
                             num_qubits=n_qubits,
                             feature_map=feature_map,
                             ansatz=ansatz,
-                            optimizer=COBYLA(),
-                            sampler=AER,
-                            pass_manager=generate_preset_pass_manager(backend=aer_simulator),
                             loss=loss,
-                            callback=lambda weight, loss_value: loss_values.append(loss_value)
+                            callback=lambda weight, loss_value: loss_values.append(loss_value),
+                            # AER backend (realistic, noisy simulation) - COBYLA required, SLSQP crashes with AER
+                            # optimizer=COBYLA(),
+                            # sampler=AER,
+                            # pass_manager=generate_preset_pass_manager(backend=aer_simulator),
+                            # To match the paper's methodology instead (default QMLSampler, SLSQP optimizer)
+                            # comment the three lines above and uncomment this:
+                            optimizer = SLSQP(),
                         )
 
+                        print("\nTraining the model...")
                         model.fit(X_train.to_numpy(), y_train)
-
 
                         print("\nTesting the model...")
                         y_pred = model.predict(X_test.to_numpy()).astype(int)
@@ -236,9 +233,6 @@ for n_samples in sample_sizes:
                             "FP": FP,
                             "FN": FN,
                         }
-
-                        # print("Result:")
-                        # print(result_dict)
 
                         results = pd.concat(
                             [results, pd.DataFrame([result_dict])],
