@@ -14,11 +14,9 @@ Run:
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-from sklearn.metrics import confusion_matrix, classification_report, matthews_corrcoef, roc_curve, auc
+from sklearn.metrics import confusion_matrix, classification_report, matthews_corrcoef
 from sklearn.model_selection import train_test_split
 from qiskit_machine_learning.algorithms import VQC
 from qiskit_machine_learning.optimizers import COBYLA
@@ -27,6 +25,7 @@ from qiskit_aer.primitives import SamplerV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer import AerSimulator
 from qiskit_machine_learning.utils import algorithm_globals
+from report_maker import make_report
 
 algorithm_globals.random_seed = 42
 from qiskit.circuit.library import (
@@ -57,7 +56,7 @@ print(df.head())
 #===================================================================
 # Further data cut
 
-sample_sizes = [300]
+sample_sizes = [30]
 n_features = df.shape[1] - 1
 n_qubits = n_features
 
@@ -65,15 +64,17 @@ n_qubits = n_features
 #===================================================================
 # Experiment settings
 
-feature_maps = ["ZZFeatureMap"]
-ansatz_list = ["EfficientSU2"]
-entanglement_options = ["full"]
-loss_functions = ["cross_entropy"]
+feature_maps = ["ZZFeatureMap"] # "PauliFeatureMap", "RealAmplitudes", "EfficientSU2", "TwoLocal"]
+ansatz_list = ["EfficientSU2"] # "ZZFeatureMap", "PauliFeatureMap", "RealAmplitudes", "TwoLocal"]
+entanglement_options = ["full"] # "linear", "circular"]
+loss_functions = ["cross_entropy"] # "squared_error", "absolute_error"]
 state = 42
 
 output_file = "vqc_results.csv"
 results = pd.DataFrame()
 errors = []
+
+reports_root = os.path.join(script_dir, "report_outputs")
 
 
 def create_circuit(circuit_name, n_qubits, entanglement, prefix):
@@ -132,27 +133,24 @@ def create_circuit(circuit_name, n_qubits, entanglement, prefix):
 y = np.ravel(df["class"].values).astype(int)
 X = df.drop(columns="class")
 
-X_train_pool, X_test, y_train_pool, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.5,
-    random_state=state,
-    stratify=y,
-)
-
 
 #===================================================================
 # Train and test VQC models
 
 for n_samples in sample_sizes:
-    X_train = X_train_pool.iloc[:n_samples]
-    y_train = y_train_pool[:n_samples]
-    loss_values = []
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        train_size=n_samples,
+        random_state=state,
+        stratify=y,
+    )
     for feature_map_name in feature_maps:
         for ansatz_name in ansatz_list:
             for entanglement in entanglement_options:
                 for loss in loss_functions:
                     try:
+                        loss_values = []
                         print("\n==============================================")
                         print("Feature map:", feature_map_name)
                         print("Ansatz:", ansatz_name)
@@ -249,59 +247,46 @@ for n_samples in sample_sizes:
 
                         results.to_csv(output_file, index=False)
 
-                        sns.heatmap(
-                            cf_matrix_norm,
-                            cmap="Purples",
-                            annot=True,
-                            linewidth=1,
-                            fmt=".1%",
-                        )
-
                         # printing the number of non-pulsars and pulsars in the training set
-                        nonpulsars = np.unique(y_train, return_counts=True)[1][0]
-                        pulsars = np.unique(y_train, return_counts=True)[1][1]
-                        print(f"Amount of non-pulsars in training set: {nonpulsars}")
-                        print(f"Amount of pulsars in training set: {pulsars}")
+                        train_nonpulsars = np.unique(y_train, return_counts=True)[1][0]
+                        train_pulsars = np.unique(y_train, return_counts=True)[1][1]
+                        print(f"Amount of non-pulsars in training set: {train_nonpulsars}")
+                        print(f"Amount of pulsars in training set: {train_pulsars}")
 
                         # printing the number of non-pulsars and pulsars in the testing set
-                        nonpulsars = np.unique(y_test, return_counts=True)[1][0]
-                        pulsars = np.unique(y_test, return_counts=True)[1][1]
-                        print(f"Amount of non-pulsars in testing set: {nonpulsars}")
-                        print(f"Amount of pulsars in testing set: {pulsars}")
+                        test_nonpulsars = np.unique(y_test, return_counts=True)[1][0]
+                        test_pulsars = np.unique(y_test, return_counts=True)[1][1]
+                        print(f"Amount of non-pulsars in testing set: {test_nonpulsars}")
+                        print(f"Amount of pulsars in testing set: {test_pulsars}")
 
-                        # plotting confusion matrix
-                        plt.title(f"Confusion Matrix, Training Size = {X_train.shape[0]}")
-                        plt.xlabel(f"Model prediction, Training Size = {X_train.shape[0]}, Testing Size = {X_test.shape[0]}")
-                        plt.ylabel("True label")
-                        confusion_filename = f"confusion_matrix_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
-                        plt.savefig(confusion_filename, bbox_inches="tight")
-                        plt.close()
-                        print(f"\nConfusion matrix saved to: {confusion_filename}")
-                        
-                        # plotting loss curve
-                        plt.plot(range(len(loss_values)), loss_values)
-                        plt.xlabel("Iteration")
-                        plt.ylabel("Loss")
-                        plt.title("Training Loss")
-                        loss_filename = f"loss_curve_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
-                        plt.savefig(loss_filename, bbox_inches="tight")
-                        plt.close()
-                        print(f"Loss curve saved to: {loss_filename}")
+                        config = {
+                            "feature_map": feature_map_name,
+                            "ansatz": ansatz_name,
+                            "entanglement": entanglement,
+                            "loss": loss,
+                            "n_samples": n_samples,
+                            "n_qubits": n_qubits,
+                            "train_size": X_train.shape[0],
+                            "test_size": X_test.shape[0],
+                            "train_nonpulsars": train_nonpulsars,
+                            "train_pulsars": train_pulsars,
+                            "test_nonpulsars": test_nonpulsars,
+                            "test_pulsars": test_pulsars,
+                        }
+                        metrics = {
+                            "accuracy": accuracy,
+                            "precision": precision,
+                            "recall": recall,
+                            "f1": f1,
+                            "fpr": fpr,
+                            "mcc": mcc,
+                            "TP": TP,
+                            "FP": FP,
+                            "TN": TN,
+                            "FN": FN,
+                        }
 
-                        # plotting the AUC curve
-                        roc_fpr, roc_tpr, thresholds = roc_curve(y_test, x_pred[:,1])
-                        auc_curve = auc(roc_fpr, roc_tpr)
-                        fig, ax = plt.subplots()
-                        ax.set_title('AUC curve')
-                        ax.plot(roc_fpr, roc_tpr, label = f"AUC = {auc_curve:.3f}")
-                        ax.plot(roc_fpr, roc_fpr, label = 'Random Guessing')
-                        ax.set_xlabel('False Positive Rate')
-                        ax.set_ylabel('True Positive Rate')
-                        auc_filename = f"auc_curve_{feature_map_name}_{ansatz_name}_{entanglement}_{n_samples}samples.png"
-                        ax.legend()
-                        plt.savefig(auc_filename, bbox_inches="tight")
-                        plt.close()
-                        print(f"AUC curve saved to {auc_filename}")
+                        make_report(reports_root, model, cf_matrix_norm, loss_values, y_test, x_pred[:, 1], config, metrics)
 
                     except Exception as e:
                         error_message = f"Error training {feature_map_name} + {ansatz_name}: {e}"
