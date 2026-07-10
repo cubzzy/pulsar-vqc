@@ -4,9 +4,11 @@ data/
 # Output files
 vqc_results.csv
 feature_selection_summary.csv
-confusion_matrix_*
-loss_curve*
-auc_curve*
+auc_curve.png
+circuit.png
+confusion_matrix.png
+loss_curve.png
+report.md
 
 # Python
 venv/
