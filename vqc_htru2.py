@@ -52,7 +52,7 @@ print(df.head())
 #===================================================================
 # Further data cut
 
-sample_sizes = [30]
+sample_sizes = [300]
 n_features = df.shape[1] - 1
 n_qubits = n_features
 
@@ -60,9 +60,9 @@ n_qubits = n_features
 #===================================================================
 # Experiment settings
 
-feature_maps = ["ZZFeatureMap"] # "PauliFeatureMap", "RealAmplitudes", "EfficientSU2", "TwoLocal"]
-ansatz_list = ["EfficientSU2"] # "ZZFeatureMap", "PauliFeatureMap", "RealAmplitudes", "TwoLocal"]
-entanglement_options = ["full"] # "linear", "circular"]
+feature_maps = ["ZZFeatureMap", "PauliFeatureMap"]
+ansatz_list = ["EfficientSU2", "ZZFeatureMap", "PauliFeatureMap", "RealAmplitudes", "TwoLocal"]
+entanglement_options = ["full", "linear", "circular"]
 loss_functions = ["cross_entropy"] # "squared_error", "absolute_error"]
 state = 42
 
@@ -186,12 +186,12 @@ for n_samples in sample_sizes:
                             loss=loss,
                             callback=lambda weight, loss_value: loss_values.append(loss_value),
                             # AER backend (realistic, noisy simulation) - COBYLA required, SLSQP crashes with AER
-                            # optimizer=COBYLA(),
-                            # sampler=AER,
-                            # pass_manager=generate_preset_pass_manager(backend=aer_simulator),
+                            optimizer=COBYLA(),
+                            sampler=AER,
+                            pass_manager=generate_preset_pass_manager(backend=aer_simulator),
                             # To match the paper's methodology instead (default QMLSampler, SLSQP optimizer)
                             # comment the three lines above and uncomment this:
-                            optimizer = SLSQP(),
+                            # optimizer = SLSQP(),
                         )
 
                         print("\nTraining the model...")
