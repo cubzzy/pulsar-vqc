@@ -107,13 +107,13 @@ def write_report(report_dir, config, metrics):
     return report_path
 
 
-def make_report(reports_root, model, cf_matrix_norm, loss_values, y_test, pulsar_proba, config, metrics):
+def make_report(vqc_outputs, model, cf_matrix_norm, loss_values, y_test, pulsar_proba, config, metrics):
     """
     Create this run's folder, save all four plots into it, and write
     report.md. Returns the report folder path.
     """
     report_dir = os.path.join(
-        reports_root,
+        vqc_outputs,
         f"{config['feature_map']}_{config['ansatz']}_{config['entanglement']}_{config['loss']}_{config['n_samples']}samples",
     )
     os.makedirs(report_dir, exist_ok=True)

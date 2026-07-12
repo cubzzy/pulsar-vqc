@@ -31,7 +31,8 @@ import pandas as pd
 import numpy as np
 import os
 
-algorithm_globals.random_seed = 42
+SEED = 42  # change this before running to get an independent run for averaging
+algorithm_globals.random_seed = SEED
 
 #===================================================================
 # Import preprocessed data
@@ -40,9 +41,9 @@ cut = 'f'
 n_feat = 3
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-path = os.path.join(script_dir, "data/FS2")
+reports_root = os.path.join(script_dir, "report_outputs")
 filename = f"{cut}-datacut_{n_feat}-features"
-data_file = os.path.join(path, filename + ".csv")
+data_file = os.path.join(reports_root, "data/FS2", filename + ".csv")
 
 df = pd.read_csv(data_file)
 
@@ -61,16 +62,16 @@ n_qubits = n_features
 # Experiment settings
 
 feature_maps = ["ZZFeatureMap", "PauliFeatureMap"]
-ansatz_list = ["EfficientSU2", "ZZFeatureMap", "PauliFeatureMap", "RealAmplitudes", "TwoLocal"]
+ansatz_list = ["EfficientSU2", "RealAmplitudes", "TwoLocal"]
 entanglement_options = ["full", "linear", "circular"]
 loss_functions = ["cross_entropy"] # "squared_error", "absolute_error"]
-state = 42
 
-output_file = "vqc_results.csv"
+csv_output_file = "vqc_results.csv"
 results = pd.DataFrame()
 errors = []
 
-reports_root = os.path.join(script_dir, "report_outputs")
+vqc_outputs = os.path.join(reports_root, "vqc_outputs")
+csv_path = os.path.join(reports_root, csv_output_file)
 
 
 def create_circuit(circuit_name, n_qubits, entanglement, prefix):
@@ -135,7 +136,7 @@ for n_samples in sample_sizes:
         X,
         y,
         train_size=n_samples,
-        random_state=state,
+        random_state=SEED,
         stratify=y,
     )
     for feature_map_name in feature_maps:
@@ -176,7 +177,7 @@ for n_samples in sample_sizes:
                             errors.append((feature_map_name, ansatz_name, error_message))
                             continue
 
-                        AER = SamplerV2(default_shots=4096, seed = 42)
+                        AER = SamplerV2(default_shots=4096, seed=SEED)
                         aer_simulator = AerSimulator()
 
                         model = VQC(
@@ -239,7 +240,7 @@ for n_samples in sample_sizes:
                             ignore_index=True,
                         )
 
-                        results.to_csv(output_file, index=False)
+                        results.to_csv(csv_path, index=False)
 
                         # printing the number of non-pulsars and pulsars in the training set
                         train_nonpulsars = np.unique(y_train, return_counts=True)[1][0]
@@ -280,7 +281,7 @@ for n_samples in sample_sizes:
                             "FN": FN,
                         }
 
-                        make_report(reports_root, model, cf_matrix_norm, loss_values, y_test, x_pred[:, 1], config, metrics)
+                        make_report(vqc_outputs, model, cf_matrix_norm, loss_values, y_test, x_pred[:, 1], config, metrics)
 
                     except Exception as e:
                         error_message = f"Error training {feature_map_name} + {ansatz_name}: {e}"
@@ -299,4 +300,4 @@ if errors:
 else:
     print("\nNo errors found.")
 
-print(f"\nResults saved to: {output_file}")
+print(f"\nResults saved to: {csv_path}")

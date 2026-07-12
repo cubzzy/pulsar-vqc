@@ -7,17 +7,17 @@ Input:
     htru2/HTRU_2.csv
 
 Outputs:
-    data/7-datacut_5-features.csv
-    data/f-datacut_5-features.csv
-    data/FS2/7-datacut_5-features.csv
+    report_outputs/data/FS1/7-datacut_5-features.csv
+    report_outputs/data/FS1/f-datacut_5-features.csv
+    report_outputs/data/FS2/7-datacut_5-features.csv
     etc.
 
 The output files are compatible with the original filename pattern:
 
     filename = f"{cut}-datacut_{n_feat}-features"
 
-The default files in data/ use FS1 = SelectKBest(f_classif).
-Optional FS2 files are placed in data/FS2/.
+FS1 = SelectKBest(f_classif), written to report_outputs/data/FS1/.
+FS2 = correlation-based selection, written to report_outputs/data/FS2/.
 """
 
 import os
@@ -139,16 +139,20 @@ def main():
     records = []
 
     # FS1 goes directly into data/ to match the original code.
-    records.extend(save_files(df, method="FS1", target_dir="data"))
+    records.extend(save_files(df, method="FS1", target_dir=os.path.join("report_outputs", "data", "FS1")))
 
     # FS2 is also generated for optional comparison.
-    records.extend(save_files(df, method="FS2", target_dir=os.path.join("data", "FS2")))
+    records.extend(save_files(df, method="FS2", target_dir=os.path.join("report_outputs", "data", "FS2")))
 
-    pd.DataFrame(records).to_csv("feature_selection_summary.csv", index=False)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    reports_root = os.path.join(script_dir, "report_outputs")
+    feature_summary_filename = "feature_selection_summary.csv"
+    feature_summary_path = os.path.join(reports_root, feature_summary_filename)
+    pd.DataFrame(records).to_csv(feature_summary_path, index=False)
 
     print()
     print("Done. Original-style file exists at:")
-    print("data/7-datacut_5-features.csv")
+    print("report_outputs/data/FS1/7-datacut_5-features.csv")
 
 
 if __name__ == "__main__":
