@@ -15,6 +15,8 @@ metrics keys: accuracy, precision, recall, f1, fpr, mcc, TP, FP, TN, FN
 import os
 from datetime import datetime
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import roc_curve, auc
