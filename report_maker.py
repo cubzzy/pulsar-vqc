@@ -20,11 +20,19 @@ import seaborn as sns
 from sklearn.metrics import roc_curve, auc
 
 
-def plot_confusion_matrix(report_dir, cf_matrix_norm, train_size, test_size):
+def _config_caption(config):
+    return (
+        f"{config['feature_map']} | {config['ansatz']} ({config['entanglement']}) | "
+        f"loss={config['loss']} | qubits={config['n_qubits']} | samples={config['n_samples']}"
+    )
+
+
+def plot_confusion_matrix(report_dir, cf_matrix_norm, train_size, test_size, config):
     sns.heatmap(cf_matrix_norm, cmap="Purples", annot=True, linewidth=1, fmt=".1%")
     plt.title(f"Confusion Matrix, Training Size = {train_size}")
     plt.xlabel(f"Model prediction, Training Size = {train_size}, Testing Size = {test_size}")
     plt.ylabel("True label")
+    plt.gcf().text(0.5, 0, _config_caption(config), ha='center', va='top', fontsize=8, color='gray')
     path = os.path.join(report_dir, "confusion_matrix.png")
     plt.savefig(path, bbox_inches="tight")
     plt.close()
@@ -32,11 +40,12 @@ def plot_confusion_matrix(report_dir, cf_matrix_norm, train_size, test_size):
     return path
 
 
-def plot_loss_curve(report_dir, loss_values):
+def plot_loss_curve(report_dir, loss_values, config):
     plt.plot(range(len(loss_values)), loss_values)
     plt.xlabel("Iteration")
     plt.ylabel("Loss")
     plt.title("Training Loss")
+    plt.gcf().text(0.5, 0, _config_caption(config), ha='center', va='top', fontsize=8, color='gray')
     path = os.path.join(report_dir, "loss_curve.png")
     plt.savefig(path, bbox_inches="tight")
     plt.close()
@@ -44,7 +53,7 @@ def plot_loss_curve(report_dir, loss_values):
     return path
 
 
-def plot_auc_curve(report_dir, y_test, pulsar_proba):
+def plot_auc_curve(report_dir, y_test, pulsar_proba, config):
     roc_fpr, roc_tpr, _ = roc_curve(y_test, pulsar_proba)
     auc_score = auc(roc_fpr, roc_tpr)
     fig, ax = plt.subplots()
@@ -54,6 +63,7 @@ def plot_auc_curve(report_dir, y_test, pulsar_proba):
     ax.set_xlabel("False Positive Rate")
     ax.set_ylabel("True Positive Rate")
     ax.legend()
+    fig.text(0.5, 0, _config_caption(config), ha='center', va='top', fontsize=8, color='gray')
     path = os.path.join(report_dir, "auc_curve.png")
     plt.savefig(path, bbox_inches="tight")
     plt.close()
@@ -61,8 +71,9 @@ def plot_auc_curve(report_dir, y_test, pulsar_proba):
     return path
 
 
-def plot_circuit(report_dir, model):
+def plot_circuit(report_dir, model, config):
     fig = model.circuit.draw(output="mpl")
+    fig.text(0.5, .1, _config_caption(config), ha='center', va='top', fontsize=8, color='gray')
     path = os.path.join(report_dir, "circuit.png")
     fig.savefig(path, bbox_inches="tight")
     plt.close(fig)
@@ -118,10 +129,10 @@ def make_report(vqc_outputs, model, cf_matrix_norm, loss_values, y_test, pulsar_
     )
     os.makedirs(report_dir, exist_ok=True)
 
-    plot_confusion_matrix(report_dir, cf_matrix_norm, config["train_size"], config["test_size"])
-    plot_loss_curve(report_dir, loss_values)
-    plot_auc_curve(report_dir, y_test, pulsar_proba)
-    plot_circuit(report_dir, model)
+    plot_confusion_matrix(report_dir, cf_matrix_norm, config["train_size"], config["test_size"], config)
+    plot_loss_curve(report_dir, loss_values, config)
+    plot_auc_curve(report_dir, y_test, pulsar_proba, config)
+    plot_circuit(report_dir, model, config)
 
     report_path = write_report(report_dir, config, metrics)
     print(f"Report saved to: {report_path}")
