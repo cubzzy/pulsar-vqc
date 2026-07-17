@@ -22,7 +22,6 @@ from qiskit_aer import AerSimulator
 from report_maker import make_report
 from qiskit.circuit.library import (
     zz_feature_map,
-    pauli_feature_map,
     real_amplitudes,
     efficient_su2,
     n_local,
@@ -32,7 +31,6 @@ import numpy as np
 import os
 
 SEED = 42  # change this before running to get an independent run for averaging
-algorithm_globals.random_seed = SEED
 
 #===================================================================
 # Import preprocessed data
@@ -53,7 +51,7 @@ print(df.head())
 #===================================================================
 # Further data cut
 
-sample_sizes = [300]
+sample_sizes = [10]
 n_features = df.shape[1] - 1
 n_qubits = n_features
 
@@ -61,7 +59,7 @@ n_qubits = n_features
 #===================================================================
 # Experiment settings
 
-feature_maps = ["ZZFeatureMap", "PauliFeatureMap"]
+feature_maps = ["ZZFeatureMap"]
 ansatz_list = ["EfficientSU2", "RealAmplitudes", "TwoLocal"]
 entanglement_options = ["full", "linear", "circular"]
 loss_functions = ["cross_entropy"] # "squared_error", "absolute_error"]
@@ -78,14 +76,6 @@ def create_circuit(circuit_name, n_qubits, entanglement, prefix):
     """Create a Qiskit circuit from a string name."""
     if circuit_name == "ZZFeatureMap":
         return zz_feature_map(
-            feature_dimension=n_qubits,
-            entanglement=entanglement,
-            reps=2,
-            parameter_prefix=prefix,
-        )
-
-    if circuit_name == "PauliFeatureMap":
-        return pauli_feature_map(
             feature_dimension=n_qubits,
             entanglement=entanglement,
             reps=2,
@@ -144,6 +134,7 @@ for n_samples in sample_sizes:
             for entanglement in entanglement_options:
                 for loss in loss_functions:
                     try:
+                        algorithm_globals.random_seed = SEED
                         loss_values = []
                         print("\n==============================================")
                         print("Feature map:", feature_map_name)
