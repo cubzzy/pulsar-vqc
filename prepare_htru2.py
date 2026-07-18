@@ -29,7 +29,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
 
 
-RANDOM_STATE = 42
+RANDOM_STATE = 42 # shuffles the htru2 data. Not important to change.
 
 COLUMNS = [
     "profile_mean",

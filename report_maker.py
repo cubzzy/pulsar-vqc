@@ -38,7 +38,7 @@ def plot_confusion_matrix(report_dir, cf_matrix_norm, train_size, test_size, con
     path = os.path.join(report_dir, "confusion_matrix.png")
     plt.savefig(path, bbox_inches="tight")
     plt.close()
-    print(f"Confusion matrix saved to: {path}")
+    print(f"\nConfusion matrix saved to: {path}")
     return path
 
 
@@ -126,7 +126,7 @@ def make_report(vqc_outputs, model, cf_matrix_norm, loss_values, y_test, pulsar_
     report.md. Returns the report folder path.
     """
     report_dir = os.path.join(
-        vqc_outputs,
+        vqc_outputs, f"seed_{config['seed']}",
         f"{config['feature_map']}_{config['ansatz']}_{config['entanglement']}_{config['loss']}_{config['n_samples']}samples",
     )
     os.makedirs(report_dir, exist_ok=True)
