@@ -32,13 +32,13 @@ import os
 
 # ================================================================== 
 # These are the parameters for the output. Change them at your discretion:
-seeds = [42, 2, 3, 4, 5]  # change this before running to get an independent run for averaging
+seeds = [1, 2, 3, 4, 5]  # change this before running to get an independent run for averaging
 cut = 'f'
 n_feat = 3
-sample_sizes = [10]
+sample_sizes = [300]
 feature_maps = ["ZZFeatureMap"]
-ansatz_list = ["EfficientSU2"] #, "RealAmplitudes", "TwoLocal"]
-entanglement_options = ["full", "linear"] #, "circular"]
+ansatz_list = ["EfficientSU2", "RealAmplitudes", "TwoLocal"]
+entanglement_options = ["full", "linear", "circular"]
 loss_functions = ["cross_entropy"] # "squared_error", "absolute_error"]
 num_reps = 2 # the number of reps the circuit completes
 num_shots = 4096 # the number of shots SamplerV2 executes

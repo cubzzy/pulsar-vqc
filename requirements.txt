@@ -9,10 +9,3 @@ qiskit-machine-learning==0.9.0
 qiskit-algorithms==0.4.0
 qiskit-aer==0.17.2
 pylatexenc==2.10
-
-# Install with: pip install -r requirements.txt
-#
-# To run:
-#   1. Place HTRU_2.csv in the data folder next to the scripts (it's already in the repo)
-#   2. python3 prepare_htru2.py
-#   3. python3 vqc_htru2.py
