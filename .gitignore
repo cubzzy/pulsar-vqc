@@ -12,6 +12,7 @@ report.md
 
 # Python
 venv/
+.env
 __pycache__/
 *.pyc
 
