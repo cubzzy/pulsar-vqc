@@ -2,7 +2,7 @@
 report_maker.py
 
 Builds the full output for a single VQC run: the confusion matrix, loss
-curve, AUC curve, and circuit diagram plots, plus a markdown report tying
+curve, ROC curve, and circuit diagram plots, plus a markdown report tying
 them together with the run's configuration and metrics. Everything for one
 run+config combination lands in its own folder under reports_root.
 
@@ -55,21 +55,21 @@ def plot_loss_curve(report_dir, loss_values, config):
     return path
 
 
-def plot_auc_curve(report_dir, y_test, pulsar_proba, config):
+def plot_roc_curve(report_dir, y_test, pulsar_proba, config):
     roc_fpr, roc_tpr, _ = roc_curve(y_test, pulsar_proba)
     auc_score = auc(roc_fpr, roc_tpr)
     fig, ax = plt.subplots()
-    ax.set_title("AUC curve")
+    ax.set_title("ROC curve")
     ax.plot(roc_fpr, roc_tpr, label=f"AUC = {auc_score:.3f}")
     ax.plot(roc_fpr, roc_fpr, label="Random Guessing")
     ax.set_xlabel("False Positive Rate")
     ax.set_ylabel("True Positive Rate")
     ax.legend()
     fig.text(0.5, 0, _config_caption(config), ha='center', va='top', fontsize=8, color='gray')
-    path = os.path.join(report_dir, "auc_curve.png")
+    path = os.path.join(report_dir, "roc_curve.png")
     plt.savefig(path, bbox_inches="tight")
     plt.close()
-    print(f"AUC curve saved to: {path}")
+    print(f"ROC curve saved to: {path}")
     return path
 
 
@@ -114,7 +114,7 @@ def write_report(report_dir, config, metrics):
 
         f.write("## Confusion Matrix\n\n![Confusion Matrix](confusion_matrix.png)\n\n")
         f.write("## Loss Curve\n\n![Loss Curve](loss_curve.png)\n\n")
-        f.write("## AUC Curve\n\n![AUC Curve](auc_curve.png)\n\n")
+        f.write("## ROC Curve\n\n![ROC Curve](roc_curve.png)\n\n")
         f.write("## Circuit Diagram\n\n![Circuit Diagram](circuit.png)\n\n")
 
     return report_path
@@ -133,7 +133,7 @@ def make_report(vqc_outputs, model, cf_matrix_norm, loss_values, y_test, pulsar_
 
     plot_confusion_matrix(report_dir, cf_matrix_norm, config["train_size"], config["test_size"], config)
     plot_loss_curve(report_dir, loss_values, config)
-    plot_auc_curve(report_dir, y_test, pulsar_proba, config)
+    plot_roc_curve(report_dir, y_test, pulsar_proba, config)
     plot_circuit(report_dir, model, config)
 
     report_path = write_report(report_dir, config, metrics)
