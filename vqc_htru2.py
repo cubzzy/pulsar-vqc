@@ -32,7 +32,7 @@ import os
 
 # ================================================================== 
 # These are the parameters for the output. Change them at your discretion:
-seeds = [1, 2, 3, 4, 5]  # change this before running to get an independent run for averaging
+seeds = [1,2,3,4,5]  # change this before running to get an independent run for averaging
 cut = 'f'
 n_feat = 3
 sample_sizes = [300]
@@ -71,11 +71,24 @@ n_qubits = n_features
 
 
 csv_output_file = "vqc_results.csv"
-results = pd.DataFrame()
 errors = []
 
 vqc_outputs = os.path.join(reports_root, "vqc_outputs")
 csv_path = os.path.join(reports_root, csv_output_file)
+
+# Load any existing results so a run with a new seed adds to the file
+# instead of overwriting seeds/configs from previous runs.
+if os.path.exists(csv_path):
+    results = pd.read_csv(csv_path)
+    # Strip stray whitespace (e.g. from manual/spreadsheet edits) so column
+    # names and values line up with the ones this script generates below --
+    # otherwise pandas treats "Feature_map " and "Feature_map" as different
+    # columns and the CSV ends up with a scattered, duplicated column set.
+    results.columns = results.columns.str.strip()
+    str_cols = results.select_dtypes(include="object").columns
+    results[str_cols] = results[str_cols].apply(lambda c: c.str.strip())
+else:
+    results = pd.DataFrame()
 
 
 def create_circuit(circuit_name, n_qubits, entanglement, prefix):
@@ -243,6 +256,12 @@ for seed in seeds:
                             results = pd.concat(
                                 [results, pd.DataFrame([result_dict])],
                                 ignore_index=True,
+                            )
+                            # Rerunning the same seed/config replaces its old row
+                            # instead of adding a duplicate.
+                            results = results.drop_duplicates(
+                                subset=["seed", "N_samples", "Feature_map", "Ansatz", "Entanglement", "Loss"],
+                                keep="last",
                             )
 
                             results.to_csv(csv_path, index=False)
