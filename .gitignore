@@ -1,0 +1,20 @@
+# Generated data files
+data/
+
+# Output files
+vqc_results.csv
+feature_selection_summary.csv
+auc_curve.png
+circuit.png
+confusion_matrix.png
+loss_curve.png
+report.md
+
+# Python
+venv/
+.env
+__pycache__/
+*.pyc
+
+# Mac
+.DS_Store
