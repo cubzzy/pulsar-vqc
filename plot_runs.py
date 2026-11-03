@@ -5,7 +5,10 @@ import numpy as np
 import re
 
 # two local circular and full and the same, so we excluded full. 
-RUNS_DIR = Path("/Users/0/Desktop/pulsqar") 
+RUNS_DIR = Path("[ADD YOUR PATH HERE]")
+
+# don't change these
+PLOT_DATA_DIR = RUNS_DIR / "plot_data"
 OUT_DIR = RUNS_DIR / "run_plots"
 
 def parse_run(name):
@@ -75,7 +78,7 @@ def plot_roc(runs, path):
 
 if __name__ == "__main__":
     OUT_DIR.mkdir(exist_ok=True)
-    runs = sorted(load_runs(RUNS_DIR), key=lambda r: -r["auc"])  # best AUC first
+    runs = sorted(load_runs(PLOT_DATA_DIR), key=lambda r: -r["auc"])  # best AUC first
     plot_loss(runs, OUT_DIR / "loss_all_runs.png")
     plot_roc(runs, OUT_DIR / "roc_all_runs.png")
     for r in runs:
