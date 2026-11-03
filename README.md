@@ -2,8 +2,6 @@
 
 Quantum machine learning research applying a **Variational Quantum Classifier (VQC)** to pulsar detection using the HTRU2 dataset, conducted as part of the UMD IRIE Summer 2026 program. 
 
-**NOTE: This is the preliminary README and is subject to change.**
-
 ---
 
 ## Overview
@@ -12,9 +10,8 @@ Pulsars are rapidly rotating neutron stars that emit periodic radio pulses. Find
 
 This project builds on [Souza et al. (2025)](https://arxiv.org/abs/2505.15600), which demonstrated a Qiskit-based VQC for pulsar classification but was limited to ~180–300 training samples due to simulation cost. We hope to extend that work through: 
 
-- Scaling to larger sample sizes using **IonQ quantum hardware**
+- Using **IonQ quantum hardware** to test for quantum advantage
 - Benchmarking against classical ML approaches
-- Overall, testing for evidence of quantum advantage on this task
 
 ---
 
