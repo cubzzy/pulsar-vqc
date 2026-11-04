@@ -4,30 +4,31 @@ ionq_inference.py
 Re-runs the TRAINED pulsar VQC (ZZFeatureMap + EfficientSU2, full, 3 qubits, seed 1, n=300)
 on a noisy backend, inference only. Weights come from vqc_htru2.py (np.save of model.weights).
 
-Run in the .venv environment (needs pandas + scikit-learn + qiskit-aer + qiskit-ionq):
-    BACKEND = "aer"        -> ideal local run, sanity check, no key needed
+    BACKEND = "aer"        -> ideal local run, no key needed
     BACKEND = "ionq_sim"   -> IonQ noisy simulator, needs IONQ_API_KEY in the environment
 """
 
-import numpy as np
-import pandas as pd
+# remember this is only on the already trained pulsar VQC.
+from qiskit.circuit.library import zz_feature_map, efficient_su2
 from sklearn.metrics import confusion_matrix, matthews_corrcoef
 from sklearn.model_selection import train_test_split
 from qiskit import transpile
-from qiskit.circuit.library import zz_feature_map, efficient_su2
+import pandas as pd
+import numpy as np
 
 # ==================================================================
-BACKEND = "aer"   # "aer" or "ionq_sim"
-NOISE_MODEL = "aria-1" # only used when BACKEND == "ionq_sim" (name from the March notebook; verify it still exists)
-N_TEST = 100
-SHOTS = 1024
-SEED = 1               # same seed as the trained model, so the train/test split matches
-
+# you can change these variables
 REPO = "/Users/0/Repos/pulsar-vqc/report_outputs"
+BACKEND = "ionq_sim"   # "aer" or "ionq_sim"
+NOISE_MODEL = "aria-1" # only used when BACKEND == "ionq_sim"
+N_TEST = 300
+SHOTS = 1024
+
+# don't touch these
+SEED = 1               # same seed as the trained model, so the train/test split matches
 DATA = f"{REPO}/data/FS2/f-datacut_3-features.csv"
 WEIGHTS = f"{REPO}/weights_ZZFeatureMap_EfficientSU2_full_seed1_n300.npy"
 # ==================================================================
-
 
 def class_totals(counts):
     """Shots per class (total_0, total_1) from a Qiskit counts dict like {'011': 348, ...}.
@@ -37,7 +38,7 @@ def class_totals(counts):
     """
     total_0 = 0
     total_1 = 0
-    for key, count in counts.items():
+    for key, count in counts.items():  
         if int(key, 2) % 2 == 0:
             total_0 += count
         else:
@@ -62,6 +63,7 @@ def build_circuit(x, weights):
 
     bind = dict(zip(feature_map.parameters, x))
     bind.update(dict(zip(ansatz.parameters, weights)))
+    assert len(weights) == len(ansatz.parameters)
     return qc.assign_parameters(bind)
 
 
@@ -75,7 +77,6 @@ def get_runner():
     from qiskit_ionq import IonQProvider
     backend = IonQProvider().get_backend("ionq_simulator")
     backend.set_options(noise_model=NOISE_MODEL)
-    # generic basis set; if IonQ rejects a gate on the 1-circuit dry run, this line is the one to change
     return lambda qc: backend.run(
         transpile(qc, basis_gates=["rx", "ry", "rz", "h", "cx"], optimization_level=0),
         shots=SHOTS,
@@ -90,7 +91,7 @@ if __name__ == "__main__":
 
     weights = np.load(WEIGHTS)
 
-    # random subset of the test set, reproducible, not class-balanced (mirrors the paper's ~200-sample test sets)
+    # random subset of the test set, reproducible, not class-balanced
     pick = np.random.default_rng(SEED).choice(len(X_test), size=N_TEST, replace=False)
     Xs, ys = X_test.to_numpy()[pick], y_test[pick]
 
