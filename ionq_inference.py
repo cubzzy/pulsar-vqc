@@ -7,8 +7,6 @@ on a noisy backend, inference only. Weights come from vqc_htru2.py (np.save of m
 Run in the .venv environment (needs pandas + scikit-learn + qiskit-aer + qiskit-ionq):
     BACKEND = "aer"        -> ideal local run, sanity check, no key needed
     BACKEND = "ionq_sim"   -> IonQ noisy simulator, needs IONQ_API_KEY in the environment
-
-Start with N_TEST = 1, then 10, then 200.
 """
 
 import numpy as np
@@ -21,7 +19,7 @@ from qiskit.circuit.library import zz_feature_map, efficient_su2
 # ==================================================================
 BACKEND = "aer"   # "aer" or "ionq_sim"
 NOISE_MODEL = "aria-1" # only used when BACKEND == "ionq_sim" (name from the March notebook; verify it still exists)
-N_TEST = 100      #number of test circuits to run. 1, then 10, then 200
+N_TEST = 100
 SHOTS = 1024
 SEED = 1               # same seed as the trained model, so the train/test split matches
 
@@ -45,18 +43,10 @@ def counts_to_label(counts):
             total_0 += count
         else:
             total_1 += count
-    return np.argmax([total_0, total_1])
+    return (np.argmax([total_0, total_1]), total_0, total_1)
 
-def counts_to_prob1(counts):
+def counts_to_prob1(counts, total_0, total_1):
     """Probability of class 1 (pulsar) from a counts dict: the fraction of shots where qubit 0 measured 1."""
-    # TODO(human): same bitstring rule as counts_to_label, but return a number between 0 and 1
-    total_0 = 0
-    total_1 = 0
-    for key, count in counts.items():
-        if int(key, 2) % 2 == 0:
-            total_0 += count
-        else:
-            total_1 += count
     prob = np.round((total_1 / (total_0 + total_1)), 4)
     return prob
 
