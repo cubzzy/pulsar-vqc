@@ -16,7 +16,7 @@ import numpy as np
 REPO = "[PUT YOUR PATH HERE]/report_outputs"
 N_TEST = 300
 # ==================================================================
-w
+
 AER = f"{REPO}/probs_aer_n{N_TEST}.csv"
 IONQ = f"{REPO}/probs_ionq_sim_n{N_TEST}.csv"
 
