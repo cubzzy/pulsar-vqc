@@ -29,12 +29,11 @@ WEIGHTS = f"{REPO}/weights_ZZFeatureMap_EfficientSU2_full_seed1_n300.npy"
 # ==================================================================
 
 
-def counts_to_label(counts):
-    """Predicted class (0 or 1) from a Qiskit counts dict like {'011': 348, ...}.
+def class_totals(counts):
+    """Shots per class (total_0, total_1) from a Qiskit counts dict like {'011': 348, ...}.
 
     VQC's default interpret function maps a measured integer x to the class x % 2,
     i.e. the class is the value of qubit 0 (the rightmost character of the bitstring).
-    The predicted class is the argmax of the two class probabilities.
     """
     total_0 = 0
     total_1 = 0
@@ -43,12 +42,16 @@ def counts_to_label(counts):
             total_0 += count
         else:
             total_1 += count
-    return (np.argmax([total_0, total_1]), total_0, total_1)
+    return total_0, total_1
 
-def counts_to_prob1(counts, total_0, total_1):
+def counts_to_label(counts):
+    """Predicted class (0 or 1): the argmax of the two class shot totals."""
+    return np.argmax(class_totals(counts))
+
+def counts_to_prob1(counts):
     """Probability of class 1 (pulsar) from a counts dict: the fraction of shots where qubit 0 measured 1."""
-    prob = np.round((total_1 / (total_0 + total_1)), 4)
-    return prob
+    total_0, total_1 = class_totals(counts)
+    return np.round(total_1 / (total_0 + total_1), 4)
 
 def build_circuit(x, weights):
     """Same circuit VQC builds: feature map on x, then the ansatz on the trained weights."""

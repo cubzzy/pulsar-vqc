@@ -2,13 +2,8 @@
 data/
 
 # Output files
-vqc_results.csv
 feature_selection_summary.csv
-auc_curve.png
-circuit.png
-confusion_matrix.png
-loss_curve.png
-report.md
+report_outputs/probs_*.csv
 
 # Python
 venv/
