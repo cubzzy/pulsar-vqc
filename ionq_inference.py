@@ -8,7 +8,6 @@ on a noisy backend, inference only. Weights come from vqc_htru2.py (np.save of m
     BACKEND = "ionq_sim"   -> IonQ noisy simulator, needs IONQ_API_KEY in the environment
 """
 
-# remember this is only on the already trained pulsar VQC.
 from qiskit.circuit.library import zz_feature_map, efficient_su2
 from sklearn.metrics import confusion_matrix, matthews_corrcoef
 from sklearn.model_selection import train_test_split
@@ -18,8 +17,8 @@ import numpy as np
 
 # ==================================================================
 # you can change these variables
-REPO = "/Users/0/Repos/pulsar-vqc/report_outputs"
-BACKEND = "ionq_sim"   # "aer" or "ionq_sim"
+REPO = "[PUT YOUR PATH HERE]/report_outputs"
+BACKEND = "aer"   # "aer" or "ionq_sim"
 NOISE_MODEL = "aria-1" # only used when BACKEND == "ionq_sim"
 N_TEST = 300
 SHOTS = 1024
@@ -38,7 +37,7 @@ def class_totals(counts):
     """
     total_0 = 0
     total_1 = 0
-    for key, count in counts.items():  
+    for key, count in counts.items():
         if int(key, 2) % 2 == 0:
             total_0 += count
         else:
@@ -61,9 +60,9 @@ def build_circuit(x, weights):
     qc = feature_map.compose(ansatz)
     qc.measure_all()
 
+    assert len(x) == len(feature_map.parameters) and len(weights) == len(ansatz.parameters)
     bind = dict(zip(feature_map.parameters, x))
     bind.update(dict(zip(ansatz.parameters, weights)))
-    assert len(weights) == len(ansatz.parameters)
     return qc.assign_parameters(bind)
 
 
