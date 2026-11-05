@@ -215,6 +215,10 @@ for seed in seeds:
                             print("\nTraining the model...")
                             model.fit(X_train.to_numpy(), y_train)
 
+                            # Save the trained weights so ionq_inference.py can rebuild this exact model
+                            weights_name = f"weights_{feature_map_name}_{ansatz_name}_{entanglement}_seed{seed}_n{n_samples}.npy"
+                            np.save(os.path.join(reports_root, weights_name), model.weights)
+
                             print("\nTesting the model...")
                             y_pred = model.predict(X_test.to_numpy()).astype(int)
                             x_pred = model.predict_proba(X_test.to_numpy())
