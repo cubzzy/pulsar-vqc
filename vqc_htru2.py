@@ -203,6 +203,7 @@ for seed in seeds:
                                     pass_manager=generate_preset_pass_manager(backend=aer_simulator),
                                 )
                             else:
+                                print("Since you didn't select 'COBYLA', SLSQP will run.")
                                 model = VQC(
                                     num_qubits=n_qubits,
                                     feature_map=feature_map,
@@ -222,6 +223,7 @@ for seed in seeds:
                             print("\nTesting the model...")
                             y_pred = model.predict(X_test.to_numpy()).astype(int)
                             x_pred = model.predict_proba(X_test.to_numpy())
+                            y_pred = np.argmax(x_pred, axis = 1)
                       
                             print("\nClassification report:")
                             print(classification_report(y_test, y_pred, labels=[0, 1]))

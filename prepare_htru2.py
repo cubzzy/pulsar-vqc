@@ -28,7 +28,8 @@ from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
 
-
+script_dir = os.path.dirname(os.path.abspath(__file__))
+reports_root = os.path.join(script_dir, "report_outputs")
 RANDOM_STATE = 42 # shuffles the htru2 data. Not important to change.
 
 COLUMNS = [
@@ -44,7 +45,7 @@ COLUMNS = [
 ]
 
 
-def load_local_htru2(path="htru2/HTRU_2.csv"):
+def load_local_htru2(path=os.path.join(script_dir, "htru2", "HTRU_2.csv")):
     """
     Load local HTRU2 data.
 
@@ -126,7 +127,7 @@ def save_files(df, method, target_dir):
 
 
 def main():
-    df = load_local_htru2("htru2/HTRU_2.csv")
+    df = load_local_htru2()
 
     df = shuffle(df, random_state=RANDOM_STATE).reset_index(drop=True)
 
@@ -139,13 +140,11 @@ def main():
     records = []
 
     # FS1 goes directly into data/ to match the original code.
-    records.extend(save_files(df, method="FS1", target_dir=os.path.join("report_outputs", "data", "FS1")))
+    records.extend(save_files(df, method="FS1", target_dir=os.path.join(reports_root, "data", "FS1")))
 
     # FS2 is also generated for optional comparison.
-    records.extend(save_files(df, method="FS2", target_dir=os.path.join("report_outputs", "data", "FS2")))
+    records.extend(save_files(df, method="FS2", target_dir=os.path.join(reports_root, "data", "FS2")))
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    reports_root = os.path.join(script_dir, "report_outputs")
     feature_summary_filename = "feature_selection_summary.csv"
     feature_summary_path = os.path.join(reports_root, feature_summary_filename)
     pd.DataFrame(records).to_csv(feature_summary_path, index=False)
