@@ -217,11 +217,10 @@ for seed in seeds:
                             model.fit(X_train.to_numpy(), y_train)
 
                             # Save the trained weights so ionq_inference.py can rebuild this exact model
-                            weights_name = f"weights_{feature_map_name}_{ansatz_name}_{entanglement}_seed{seed}_n{n_samples}.npy"
+                            weights_name = f"weights_{feature_map_name}_{ansatz_name}_{entanglement}_seed{seed}_n{n_samples}_{optimizer}.npy"
                             np.save(os.path.join(reports_root, weights_name), model.weights)
 
                             print("\nTesting the model...")
-                            y_pred = model.predict(X_test.to_numpy()).astype(int)
                             x_pred = model.predict_proba(X_test.to_numpy())
                             y_pred = np.argmax(x_pred, axis = 1)
                       
@@ -247,6 +246,7 @@ for seed in seeds:
                                 "Ansatz": ansatz_name,
                                 "Entanglement": entanglement,
                                 "Loss": loss,
+                                "Optimizer": optimizer,
                                 "Accuracy": accuracy,
                                 "Precision": precision,
                                 "Recall": recall,
@@ -266,7 +266,7 @@ for seed in seeds:
                             # Rerunning the same seed/config replaces its old row
                             # instead of adding a duplicate.
                             results = results.drop_duplicates(
-                                subset=["seed", "N_samples", "Feature_map", "Ansatz", "Entanglement", "Loss"],
+                                subset=["seed", "N_samples", "Feature_map", "Ansatz", "Entanglement", "Loss", "Optimizer"],
                                 keep="last",
                             )
 
@@ -290,6 +290,7 @@ for seed in seeds:
                                 "ansatz": ansatz_name,
                                 "entanglement": entanglement,
                                 "loss": loss,
+                                "optimizer": optimizer,
                                 "n_samples": n_samples,
                                 "n_qubits": n_qubits,
                                 "train_size": X_train.shape[0],
