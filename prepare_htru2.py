@@ -1,5 +1,5 @@
 """
-prepare_htru2_from_local.py
+prepare_htru2.py
 
 Preprocesses a local HTRU_2.csv file for Qiskit VQC experiments.
 
@@ -118,7 +118,7 @@ def save_files(df, method, target_dir):
             "method": method,
             "n_features": n_features,
             "selected_features": ", ".join(selected),
-            "full_file": full_path,
+            "full_file": os.path.relpath(full_path, reports_root),
         })
 
         print(f"{method}, {n_features} features: {selected}")
