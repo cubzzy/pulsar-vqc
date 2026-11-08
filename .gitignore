@@ -9,6 +9,7 @@ circuit.png
 confusion_matrix.png
 loss_curve.png
 report.md
+report_outputs/
 
 # Python
 venv/
