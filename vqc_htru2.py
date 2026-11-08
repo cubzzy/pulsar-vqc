@@ -11,15 +11,15 @@ Run:
     python vqc_htru2.py
 """
 
-from sklearn.metrics import confusion_matrix, classification_report, matthews_corrcoef
-from sklearn.model_selection import train_test_split
-from qiskit_machine_learning.algorithms import VQC
+from sklearn.metrics import confusion_matrix, classification_report, matthews_corrcoef, f1_score
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_machine_learning.optimizers import COBYLA, SLSQP
 from qiskit_machine_learning.utils import algorithm_globals
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from sklearn.model_selection import train_test_split
+from qiskit_machine_learning.algorithms import VQC
 from qiskit_aer.primitives import SamplerV2
-from qiskit_aer import AerSimulator
 from report_maker import make_report
+from qiskit_aer import AerSimulator
 from qiskit.circuit.library import (
     zz_feature_map,
     real_amplitudes,
@@ -43,9 +43,10 @@ loss_functions = ["cross_entropy"] # "squared_error", "absolute_error"]
 num_reps = 2 # the number of reps the circuit completes
 num_shots = 4096 # the number of shots SamplerV2 executes
 feat_sel = "FS2" # the method that determines how the features are chosen. See prepare_htru2.py
-optimizer = "COBYLA" # if sampler = "AER", the backend will be SamplerV2 from AER and the optimizer will be set to COBYLA.
+optimizer = "COBYLA" # if optimizer = "COBYLA", the backend will be SamplerV2 from AER
 # if the optimizer = "SLSQP", the backend will be QMLSampler (the default sampler) and the optimizer will be set to SLSQP.
-
+if optimizer not in ("COBYLA", "SLSQP"):
+    raise ValueError(f"optimizer must be 'COBYLA' or 'SLSQP', got {optimizer!r}")
 #===================================================================
 # Import preprocessed data
 
@@ -202,8 +203,7 @@ for seed in seeds:
                                     sampler=AER,
                                     pass_manager=generate_preset_pass_manager(backend=aer_simulator),
                                 )
-                            else:
-                                print("Since you didn't select 'COBYLA', SLSQP will run.")
+                            elif optimizer == "SLSQP":
                                 model = VQC(
                                     num_qubits=n_qubits,
                                     feature_map=feature_map,
@@ -212,7 +212,8 @@ for seed in seeds:
                                     callback=lambda weight, loss_value: loss_values.append(loss_value),
                                     optimizer = SLSQP()
                                 )
-                            
+                            else:
+                                raise ValueError(f"optimizer must be 'COBYLA' or 'SLSQP', got {optimizer!r}")
                             print("\nTraining the model...")
                             model.fit(X_train.to_numpy(), y_train)
 
@@ -234,7 +235,7 @@ for seed in seeds:
                             accuracy = round((TP + TN) / (TP + TN + FP + FN), 3)
                             precision = round(TP / (TP + FP), 3) if (TP + FP) else 0
                             recall = round(TP / (TP + FN), 3) if (TP + FN) else 0
-                            f1 = round(2 * precision * recall / (precision + recall), 3) if (precision + recall) else 0
+                            f1 = round(f1_score(y_test, y_pred), 3)
                             fpr = round(FP / (FP + TN), 3) if (FP + TN) else 0
                             mcc = round(matthews_corrcoef(y_test, y_pred), 3)
 
