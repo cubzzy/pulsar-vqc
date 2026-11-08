@@ -10,7 +10,7 @@ Pulsars are rapidly rotating neutron stars that emit periodic radio pulses. Find
 
 This project builds on [Souza et al. (2025)](https://arxiv.org/abs/2505.15600), which demonstrated a Qiskit-based VQC for pulsar classification but was limited to ~180–300 training samples due to simulation cost. We hope to extend that work through: 
 
-- Using **IonQ quantum hardware** to test for quantum advantage
+- Evaluating performance using **IonQ quantum hardware** 
 - Benchmarking against classical ML approaches
 
 ---
@@ -76,6 +76,9 @@ python vqc_htru2.py
 # We have verified this code to work on Mac and Windows. 
 # Expect it to take several hours for a full multi-seed run.
 ```
+
+**Python Version** 
+3.14.7
 
 **Dependencies:** `numpy`, `pandas`, `matplotlib`, `seaborn`, `scikit-learn`, `scipy`, `qiskit`, `qiskit-machine-learning`, `qiskit-algorithms`, `qiskit-aer`,
 `pylatexenc`
