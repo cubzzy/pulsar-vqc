@@ -97,6 +97,7 @@ def write_report(report_dir, config, metrics):
         f.write(f"| Ansatz | {config['ansatz']} |\n")
         f.write(f"| Entanglement | {config['entanglement']} |\n")
         f.write(f"| Loss function | {config['loss']} |\n")
+        f.write(f"| Optimizer | {config['optimizer']} |\n")
         f.write(f"| Training samples | {config['n_samples']} |\n")
         f.write(f"| Features/qubits | {config['n_qubits']} |\n")
         f.write(f"| Training set (non-pulsar / pulsar) | {config['train_nonpulsars']} / {config['train_pulsars']} |\n")
@@ -127,7 +128,7 @@ def make_report(vqc_outputs, model, cf_matrix_norm, loss_values, y_test, pulsar_
     """
     report_dir = os.path.join(
         vqc_outputs, f"seed_{config['seed']}",
-        f"{config['feature_map']}_{config['ansatz']}_{config['entanglement']}_{config['loss']}_{config['n_samples']}samples",
+        f"{config['feature_map']}_{config['ansatz']}_{config['entanglement']}_{config['loss']}_{config['optimizer']}_{config['n_samples']}samples",
     )
     os.makedirs(report_dir, exist_ok=True)
 
