@@ -6,7 +6,7 @@ curve, ROC curve, and circuit diagram plots, plus a markdown report tying
 them together with the run's configuration and metrics. Everything for one
 run+config combination lands in its own folder under reports_root.
 
-config keys: feature_map, ansatz, entanglement, loss, n_samples, n_qubits,
+config keys: seed, feature_map, ansatz, entanglement, loss, optimizer, n_samples, n_qubits,
              train_size, test_size, train_nonpulsars, train_pulsars,
              test_nonpulsars, test_pulsars
 metrics keys: accuracy, precision, recall, f1, fpr, mcc, TP, FP, TN, FN
