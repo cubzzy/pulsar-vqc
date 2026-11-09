@@ -2,8 +2,7 @@
 data/
 
 # Output files
-feature_selection_summary.csv
-report_outputs/probs_*.csv
+report_outputs/
 
 # Python
 venv/

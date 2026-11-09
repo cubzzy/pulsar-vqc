@@ -14,19 +14,21 @@ from sklearn.model_selection import train_test_split
 from qiskit import transpile
 import pandas as pd
 import numpy as np
+import os
 
 # ==================================================================
 # you can change these variables
-REPO = "[PUT YOUR PATH HERE]/report_outputs"
+REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report_outputs")
 BACKEND = "aer"   # "aer" or "ionq_sim"
 NOISE_MODEL = "aria-1" # only used when BACKEND == "ionq_sim"
-N_TEST = 300
+N_TEST = 10
+N_TRAIN = 300          # must match the n_samples the weights were trained with
 SHOTS = 1024
 
 # don't touch these
 SEED = 1               # same seed as the trained model, so the train/test split matches
 DATA = f"{REPO}/data/FS2/f-datacut_3-features.csv"
-WEIGHTS = f"{REPO}/weights_ZZFeatureMap_EfficientSU2_full_seed1_n300.npy"
+WEIGHTS = f"{REPO}/weights_ZZFeatureMap_EfficientSU2_full_seed1_n{N_TRAIN}_COBYLA.npy"
 # ==================================================================
 
 def class_totals(counts):
@@ -86,7 +88,7 @@ if __name__ == "__main__":
     df = pd.read_csv(DATA)
     y = np.ravel(df["class"].values).astype(int)
     X = df.drop(columns="class")
-    _, X_test, _, y_test = train_test_split(X, y, train_size=300, random_state=SEED, stratify=y)
+    _, X_test, _, y_test = train_test_split(X, y, train_size=N_TRAIN, random_state=SEED, stratify=y)
 
     weights = np.load(WEIGHTS)
 

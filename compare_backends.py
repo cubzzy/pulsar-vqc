@@ -10,10 +10,11 @@ from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import os
 
 # ==================================================================
 # you can change these variables
-REPO = "[PUT YOUR PATH HERE]/report_outputs"
+REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report_outputs")
 N_TEST = 300
 # ==================================================================
 
