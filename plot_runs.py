@@ -5,7 +5,7 @@ import numpy as np
 import re
 
 # two local circular and full and the same, so we excluded full. 
-RUNS_DIR = Path("[ADD YOUR PATH HERE]")
+RUNS_DIR = Path(__file__).resolve().parent
 
 # don't change these
 PLOT_DATA_DIR = RUNS_DIR / "plot_data"
