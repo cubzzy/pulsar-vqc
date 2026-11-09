@@ -8,7 +8,7 @@ Quantum machine learning research applying a **Variational Quantum Classifier (V
 
 Pulsars are rapidly rotating neutron stars that emit periodic radio pulses. Finding them in large radio survey datasets is a classification problem at massive scale. For example, the HTRU2 dataset (High Time Resolution Universe 2) contains almost 18,000 candidates, of which only around 9% are confirmed pulsars.
 
-This project builds on [Souza et al. (2025)](https://arxiv.org/abs/2505.15600), which demonstrated a Qiskit-based VQC for pulsar classification. We reproduce their work and extend it by: 
+This project builds on [Souza et al. (2025)](https://arxiv.org/abs/2505.15600), which demonstrated a Qiskit-based VQC for pulsar classification. We reproduce their work and hope to extend it by: 
 
 - Evaluating performance using **IonQ quantum hardware** 
 - Benchmarking against classical ML approaches
