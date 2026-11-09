@@ -1,5 +1,7 @@
 # Pulsar VQC — QML IRIE Summer 2026
 
+> **This branch (`results`) is an archive of earlier run outputs** (`report_outputs/`), from before `main` stopped tracking outputs. The code and the sections below are a snapshot and may be out of date; see the `main` branch for the current code and README.
+
 Quantum machine learning research applying a **Variational Quantum Classifier (VQC)** to pulsar detection using the HTRU2 dataset, conducted as part of the UMD IRIE Summer 2026 program. 
 
 ---
