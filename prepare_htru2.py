@@ -139,10 +139,10 @@ def main():
 
     records = []
 
-    # FS1 goes directly into data/ to match the original code.
+    # FS1 (SelectKBest) is generated for comparison.
     records.extend(save_files(df, method="FS1", target_dir=os.path.join(reports_root, "data", "FS1")))
 
-    # FS2 is also generated for optional comparison.
+    # FS2 (correlation-based) is the method vqc_htru2.py reads by default (feat_sel).
     records.extend(save_files(df, method="FS2", target_dir=os.path.join(reports_root, "data", "FS2")))
 
     feature_summary_filename = "feature_selection_summary.csv"
@@ -150,8 +150,9 @@ def main():
     pd.DataFrame(records).to_csv(feature_summary_path, index=False)
 
     print()
-    print("Done. Original-style file exists at:")
-    print("report_outputs/data/FS1/7-datacut_5-features.csv")
+    print("Done. Feature-selected files written to:")
+    print("report_outputs/data/FS1/ and report_outputs/data/FS2/")
+    print("Summary of selected features: report_outputs/feature_selection_summary.csv")
 
 
 if __name__ == "__main__":
