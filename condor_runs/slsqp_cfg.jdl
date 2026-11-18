@@ -1,0 +1,10 @@
+Universe = vanilla
+Executable = $ENV(HOME)/condor_runs/run_vqc_cfg.sh
+Arguments = $(seed) SLSQP $(ansatz) $(ent)
+Requirements = TARGET.Machine =!= "r510-0-4.privnet"
+Output = $ENV(HOME)/condor_runs/log/slsqp_$(ansatz)_$(ent)_seed$(seed).stdout
+Error  = $ENV(HOME)/condor_runs/log/slsqp_$(ansatz)_$(ent)_seed$(seed).stderr
+Log    = $ENV(HOME)/condor_runs/log/slsqp_$(ansatz)_$(ent)_seed$(seed).log
+Should_Transfer_Files = YES
+When_to_transfer_output = ON_EXIT
+Queue seed,ansatz,ent from $ENV(HOME)/condor_runs/configs.txt

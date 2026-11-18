@@ -20,3 +20,7 @@ This branch contains extra code that's still relevant but not important to the m
 - Outputs a scatter plot showing the comparison between the predictions for each object in the test set
 - Prints to the terminal information about the number of label flips (about something being a pulsar or not), the confidence slope. For example, if the confidence slope is 0.880, then the noisy model is 12% less confident
 - Prints to the terminal the mean p1 (prediction of something being a pulsar vs not) of a non pulsar and a pulsar for both aer and IonQ, as well as the AUCs for each.
+
+**slsqp_cfg.jdl, run_vqc_cfg.sh, configs.txt**
+- All three of these scripts were used on the UMD Tier 3 HPC cluster to run all configurations concurrently
+- Scripts are used with vqc_htru2.py (a modified version) under condor_runs which uses argparse to run each configuration on different cores
